@@ -138,6 +138,26 @@ def load_json(path):
         return {}
 
 
+def check_meetings():
+    """今後の会合が登録されていない通貨を洗い出す（Actionsのログで気づけるように）。"""
+    path = os.path.join(ROOT, "meetings.json")
+    data = load_json(path)
+    today = datetime.now(JST).strftime("%Y-%m-%d")
+    stale, soon = [], []
+    for code, _, _, _, _ in CURRENCIES:
+        entry = data.get(code)
+        if not isinstance(entry, dict):
+            stale.append(code)
+            continue
+        future = [m["date"] for m in entry.get("meetings", [])
+                  if isinstance(m, dict) and m.get("date", "") >= today]
+        if not future:
+            stale.append(code)
+        elif len(future) <= 1:
+            soon.append(code)
+    return stale, soon
+
+
 def main():
     overrides = load_json(OVERRIDES)
     previous = load_json(OUT)
@@ -191,6 +211,8 @@ def main():
               file=sys.stderr)
         return 1
 
+    stale_mtg, soon_mtg = check_meetings()
+
     now = datetime.now(JST)
     payload = {
         "generated_at": now.isoformat(timespec="seconds"),
@@ -200,6 +222,7 @@ def main():
         "bis_ok": bis_ok,
         "bis_error": bis_error,
         "missing": missing,
+        "meetings_stale": stale_mtg,
         "rows": rows,
     }
 
@@ -213,6 +236,12 @@ def main():
         print(f"  {r['code']:>4} {r['rate']:>7.2f}%  {r['changed_on']}  ({r['source']})")
     if missing:
         print(f"[warn] BISから取得できなかった通貨: {', '.join(missing)}", file=sys.stderr)
+    if stale_mtg:
+        print(f"[warn] 今後の会合日程が未登録: {', '.join(stale_mtg)}"
+              f" → meetings.json に追記してください", file=sys.stderr)
+    if soon_mtg:
+        print(f"[note] 残り1件のみ: {', '.join(soon_mtg)} → そろそろ翌年分の追記を",
+              file=sys.stderr)
     # BISが落ちていても前回値で site は成立するので、非ゼロ終了はしない
     return 0
 

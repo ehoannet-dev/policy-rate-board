@@ -1,0 +1,113 @@
+{
+  "_について": "各中銀の政策決定会合の予定。日付は結果が発表される日（現地）。過ぎた日付は自動で読み飛ばされるので消さなくてよい。年末に翌年分を追記する。",
+  "_更新のしかた": "dates に \"YYYY-MM-DD\" を追加するだけ。time は分かる範囲で。calendar は公式の日程ページ。",
+  "_確認日": "2026-08-15",
+
+  "USD": {
+    "cb": "FOMC",
+    "note": "会合2日目の翌日未明に声明。日付・時刻は日本時間。",
+    "calendar": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+    "meetings": [
+      { "date": "2026-09-17", "time": "3:00 JST", "label": "9/15-16会合" },
+      { "date": "2026-10-29", "time": "3:00 JST", "label": "10/27-28会合" },
+      { "date": "2026-12-10", "time": "4:00 JST", "label": "12/8-9会合" }
+    ]
+  },
+
+  "JPY": {
+    "cb": "日銀",
+    "note": "会合2日目の昼ごろ発表。◎は展望レポート同時公表。",
+    "calendar": "https://www.boj.or.jp/mopo/mpmsche_minu/index.htm",
+    "meetings": [
+      { "date": "2026-09-18", "label": "9/17-18会合" },
+      { "date": "2026-10-30", "label": "10/29-30会合 ◎展望レポート" },
+      { "date": "2026-12-18", "label": "12/17-18会合" }
+    ]
+  },
+
+  "EUR": {
+    "cb": "ECB",
+    "note": "政策発表のあと記者会見。",
+    "calendar": "https://www.ecb.europa.eu/press/calendars/mgcgc/html/index.en.html",
+    "meetings": [
+      { "date": "2026-09-10", "label": "9月理事会" },
+      { "date": "2026-10-29", "time": "22:15 JST", "label": "10月理事会" },
+      { "date": "2026-12-17", "time": "22:15 JST", "label": "12月理事会" }
+    ]
+  },
+
+  "GBP": {
+    "cb": "BOE",
+    "note": "英国時間12:00に議事要旨・票数と同時公表。",
+    "calendar": "https://www.bankofengland.co.uk/monetary-policy/upcoming-mpc-dates",
+    "meetings": [
+      { "date": "2026-09-17", "time": "12:00 UK", "label": "9月MPC" },
+      { "date": "2026-11-05", "time": "12:00 UK", "label": "11月MPC ◎金融政策報告" },
+      { "date": "2026-12-17", "time": "12:00 UK", "label": "12月MPC" }
+    ]
+  },
+
+  "AUD": {
+    "cb": "RBA",
+    "note": "2日目の14:30（豪州東部時間）に発表、15:30から総裁会見。",
+    "calendar": "https://www.rba.gov.au/schedules-events/board-meeting-schedules.html",
+    "meetings": [
+      { "date": "2026-09-29", "time": "14:30 AEST", "label": "9/28-29会合" },
+      { "date": "2026-11-03", "time": "14:30 AEDT", "label": "11/2-3会合 ◎四半期声明" },
+      { "date": "2026-12-08", "time": "14:30 AEDT", "label": "12/7-8会合" }
+    ]
+  },
+
+  "NZD": {
+    "cb": "RBNZ",
+    "note": "MPS（声明）は見通し改定あり、MPRは中間レビュー。",
+    "calendar": "https://www.rbnz.govt.nz/news-and-events/how-we-release-information/ocr-decision-dates-and-financial-stability-report-dates-to-feb-2028",
+    "meetings": [
+      { "date": "2026-09-02", "label": "9月 MPS（声明）" },
+      { "date": "2026-10-28", "label": "10月 MPR（レビュー）" },
+      { "date": "2026-12-09", "label": "12月 MPS（声明）" }
+    ]
+  },
+
+  "CAD": {
+    "cb": "BOC",
+    "note": "東部時間9:45に発表。1・4・7・10月は金融政策報告を同時公表。",
+    "calendar": "https://www.bankofcanada.ca/press/upcoming-events/",
+    "meetings": [
+      { "date": "2026-09-02", "time": "9:45 ET", "label": "9月決定" },
+      { "date": "2026-10-28", "time": "9:45 ET", "label": "10月決定 ◎金融政策報告" },
+      { "date": "2026-12-09", "time": "9:45 ET", "label": "12月決定" }
+    ]
+  },
+
+  "CHF": {
+    "cb": "SNB",
+    "note": "四半期ごとの政策評価。年4回のみ。",
+    "calendar": "https://www.snb.ch/en/the-snb/mandates-goals/monetary-policy",
+    "meetings": [
+      { "date": "2026-09-24", "label": "9月政策評価" },
+      { "date": "2026-12-10", "label": "12月政策評価" }
+    ]
+  },
+
+  "ZAR": {
+    "cb": "SARB",
+    "note": "年6回。2026年後半の確定日程は未確認のため空欄。公式カレンダーで確認して追記のこと。",
+    "calendar": "https://www.resbank.co.za/en/home/what-we-do/monetary-policy/monetary-policy-committee",
+    "meetings": []
+  },
+
+  "TRY": {
+    "cb": "CBRT",
+    "note": "年8回。2026年後半の確定日程は未確認のため空欄。公式カレンダーで確認して追記のこと。",
+    "calendar": "https://www.tcmb.gov.tr/wps/wcm/connect/EN/TCMB+EN/Main+Menu/Announcements/Press+Releases",
+    "meetings": []
+  },
+
+  "MXN": {
+    "cb": "Banxico",
+    "note": "年8回、木曜13:00（メキシコ時間）。2026年後半の確定日程は未確認のため空欄。公式カレンダーで確認して追記のこと。",
+    "calendar": "https://www.banxico.org.mx/publications-and-press/announcements-of-monetary-policy-decisions/monetary-policy-announcements.html",
+    "meetings": []
+  }
+}

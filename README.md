@@ -62,6 +62,49 @@ https://<ユーザー名>.github.io/policy-rate-board/
 
 ---
 
+## 次回会合の日程を更新する
+
+`meetings.json` に各中銀の予定を書いてあります。日付が過ぎたものは自動で読み飛ばされるので、
+消す必要はありません。**年末に翌年分を追記する**運用です。
+
+```json
+"USD": {
+  "cb": "FOMC",
+  "calendar": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+  "meetings": [
+    { "date": "2027-01-27", "time": "4:00 JST", "label": "1/26-27会合" }
+  ]
+}
+```
+
+必須は `date` だけ。`time` と `label` は任意です。push すれば即反映されます
+（会合日程は画面側で直接読むので、Actions の実行を待つ必要はありません）。
+
+### 未登録の通貨について
+
+**ZAR・TRY・MXN は 2026年後半の確定日程を確認できなかったため空欄**にしてあります。
+画面下部に公式カレンダーへのリンクが出るので、確認して追記してください。
+また毎日の Actions は、今後の予定が尽きた通貨をログに警告として出します。
+
+```
+[warn] 今後の会合日程が未登録: ZAR, TRY, MXN → meetings.json に追記してください
+```
+
+### 収録済みの日程（2026年8月15日確認）
+
+| 通貨 | 残りの2026年予定 | 確認元 |
+|---|---|---|
+| USD | 9/17・10/29・12/10（日本時間の声明発表日） | FRB公表の年間日程 |
+| JPY | 9/18・10/30・12/18 | 日銀 |
+| EUR | 9/10・10/29・12/17 | ECB理事会日程 |
+| GBP | 9/17・11/5・12/17 | BOE公表の2026年日程 |
+| AUD | 9/29・11/3・12/8 | RBA公表の2026年日程 |
+| NZD | 9/2・10/28・12/9 | RBNZ公表の日程 |
+| CAD | 9/2・10/28・12/9 | BOC公表の2026年日程 |
+| CHF | 9/24・12/10 | 四半期政策評価 |
+
+---
+
 ## 会合直後に手で直したいとき
 
 BIS は各中銀の発表を反映するまで数日かかることがある。
@@ -85,7 +128,8 @@ index.html                        画面（スマホ優先レイアウト）
 sw.js                             オフライン用 Service Worker
 manifest.webmanifest              ホーム画面追加用
 data/rates.json                   Actions が生成する金利データ
-overrides.json                    手動上書き
+overrides.json                    金利の手動上書き
+meetings.json                     会合日程（画面が直接読む）
 scripts/fetch_rates.py            BIS から取得する（標準ライブラリのみ）
 .github/workflows/update-rates.yml  毎日実行
 ```

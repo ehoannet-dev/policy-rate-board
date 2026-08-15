@@ -78,6 +78,35 @@
   .val .diff.p{color:var(--rise)} .val .diff.m{color:var(--fall)} .val .diff.z{color:var(--ink-soft)}
   .val .dt{font-size:9.5px;color:var(--ink-soft);letter-spacing:.02em}
   .val .flag{font-size:9.5px;color:var(--brass);letter-spacing:.04em}
+  .val .mtg{font-size:10px;color:var(--ink-soft);letter-spacing:.02em;margin-top:2px}
+  .val .mtg b{font-weight:600;color:var(--ink)}
+  .val .mtg.soon{color:var(--rise)} .val .mtg.soon b{color:var(--rise)}
+  .val .mtg.none{color:var(--brass)}
+
+  /* 直近の会合ストリップ */
+  .next-strip{display:flex;gap:0;overflow-x:auto;-webkit-overflow-scrolling:touch;
+    border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--panel-2);margin-top:14px}
+  .next-strip .n{flex:none;padding:9px 14px;border-right:1px solid var(--line);min-width:104px}
+  .next-strip .n:last-child{border-right:none}
+  .next-strip .c{font-family:var(--mono);font-size:12px;font-weight:600;letter-spacing:.05em}
+  .next-strip .d{font-family:var(--mono);font-size:11px;color:var(--ink-soft)}
+  .next-strip .k{font-family:var(--mono);font-size:10.5px;font-weight:600}
+  .next-strip .n.soon{background:rgba(180,48,42,.12)}
+  .next-strip .n.soon .k{color:var(--rise)}
+
+  /* 会合カレンダー */
+  .cal{width:100%;border-collapse:collapse;font-size:12.5px}
+  .cal tr{border-bottom:1px solid var(--line)}
+  .cal tr:last-child{border-bottom:none}
+  .cal tr.soon{background:rgba(180,48,42,.09)}
+  .cal td{padding:8px 4px;vertical-align:top}
+  .cal .dt{font-family:var(--mono);white-space:nowrap;width:64px}
+  .cal .cd{font-family:var(--mono);font-weight:600;width:44px}
+  .cal .lb{color:var(--ink-soft);font-size:11.5px}
+  .cal .kk{font-family:var(--mono);font-size:11px;text-align:right;white-space:nowrap;width:56px}
+  .cal .kk.soon{color:var(--rise);font-weight:600}
+  .missing{font-size:11.5px;color:var(--ink-soft);margin-top:12px;line-height:1.6}
+  .missing a{color:var(--earth);text-decoration:none;border-bottom:1px solid rgba(46,107,79,.35)}
 
   /* 折りたたみ */
   details{border-bottom:1px solid var(--line);background:var(--panel)}
@@ -140,7 +169,17 @@
     <div class="chips" id="chips"></div>
   </div>
 
+  <div class="next-strip" id="nextStrip"></div>
+
   <div class="meters" id="meters"></div>
+
+  <details id="calWrap" open>
+    <summary>会合カレンダー（今後の予定）</summary>
+    <div class="inner">
+      <table class="cal" id="calendar"></table>
+      <div class="missing" id="calMissing"></div>
+    </div>
+  </details>
 
   <details id="mxWrap">
     <summary>金利差マトリクス（全ペア）</summary>
@@ -201,6 +240,7 @@ const SEED = {
 };
 
 let data = SEED;
+let meetings = {};                       // meetings.json の中身
 let base = localStorage.getItem("prb:base") || "JPY";
 
 const $ = id => document.getElementById(id);
@@ -209,6 +249,36 @@ const jpDate = s => s ? s.replace(/-/g, "/") : "—";
 
 /* 0–8%を70%幅、それ以上は圧縮 */
 const gauge = r => r <= 8 ? Math.max(0, r) / 8 * 70 : 70 + Math.min(30, (r - 8) / 32 * 30);
+
+/* --- 会合日程 --- */
+function today0(){ const d = new Date(); d.setHours(0,0,0,0); return d; }
+function parseISO(s){ const [y,m,d] = s.split("-").map(Number); return new Date(y, m-1, d); }
+function daysUntil(iso){ return Math.round((parseISO(iso) - today0()) / 86400000); }
+const mmdd = iso => { const [, m, d] = iso.split("-"); return `${+m}/${+d}`; };
+
+/* その通貨の「今日以降で最も近い会合」。無ければ null */
+function nextMeeting(code){
+  const m = meetings[code];
+  if (!m || !Array.isArray(m.meetings)) return null;
+  const future = m.meetings
+    .filter(x => x.date && daysUntil(x.date) >= 0)
+    .sort((a, b) => a.date.localeCompare(b.date));
+  return future.length ? { ...future[0], cb: m.cb, calendar: m.calendar, note: m.note } : null;
+}
+
+/* 全通貨の今後の会合を時系列に並べる */
+function allUpcoming(limit){
+  const out = [];
+  Object.keys(meetings).forEach(code => {
+    if (code.startsWith("_")) return;
+    const m = meetings[code];
+    (m.meetings || []).forEach(x => {
+      if (x.date && daysUntil(x.date) >= 0) out.push({ ...x, code, cb: m.cb });
+    });
+  });
+  out.sort((a, b) => a.date.localeCompare(b.date));
+  return limit ? out.slice(0, limit) : out;
+}
 
 function median(){
   const a = data.rows.map(r => r.rate).sort((x, y) => x - y);
@@ -242,10 +312,58 @@ function renderMeters(){
         <div class="r">${r.label || fmt(r.rate)}<em>%</em></div>
         ${diff}
         <div class="dt">変更 ${jpDate(r.changed_on)}</div>
+        ${mtgLine(r.code)}
         ${r.source === "手動" ? '<div class="flag">手動更新</div>' : ""}
       </div>
     </div>`;
   }).join("");
+}
+
+function mtgLine(code){
+  const n = nextMeeting(code);
+  if (!n) return `<div class="mtg none">次回 未登録</div>`;
+  const d = daysUntil(n.date);
+  const when = d === 0 ? "今日" : d === 1 ? "明日" : `あと${d}日`;
+  return `<div class="mtg ${d <= 7 ? "soon" : ""}">次回 <b>${mmdd(n.date)}</b> ${when}</div>`;
+}
+
+function renderNextStrip(){
+  const up = allUpcoming(8);
+  const el = $("nextStrip");
+  if (!up.length) { el.innerHTML = ""; el.style.display = "none"; return; }
+  el.style.display = "flex";
+  el.innerHTML = up.map(m => {
+    const d = daysUntil(m.date);
+    const when = d === 0 ? "本日" : d === 1 ? "明日" : `あと${d}日`;
+    return `<div class="n ${d <= 7 ? "soon" : ""}">
+      <div class="c">${m.code}</div>
+      <div class="d">${mmdd(m.date)}</div>
+      <div class="k">${when}</div>
+    </div>`;
+  }).join("");
+}
+
+function renderCalendar(){
+  const up = allUpcoming();
+  $("calendar").innerHTML = up.map(m => {
+    const d = daysUntil(m.date);
+    const when = d === 0 ? "本日" : d === 1 ? "明日" : `${d}日後`;
+    return `<tr class="${d <= 7 ? "soon" : ""}">
+      <td class="dt">${mmdd(m.date)}</td>
+      <td class="cd">${m.code}</td>
+      <td><div>${m.cb}</div><div class="lb">${m.label || ""}${m.time ? " ／ " + m.time : ""}</div></td>
+      <td class="kk ${d <= 7 ? "soon" : ""}">${when}</td>
+    </tr>`;
+  }).join("") || `<tr><td class="lb">登録された予定がありません。</td></tr>`;
+
+  const none = Object.keys(meetings)
+    .filter(c => !c.startsWith("_") && !nextMeeting(c));
+  $("calMissing").innerHTML = none.length
+    ? `日程未登録：${none.map(c => {
+        const m = meetings[c];
+        return `<a href="${m.calendar}" target="_blank" rel="noopener">${c}</a>`;
+      }).join("・")}　公式カレンダーで確認して <code>meetings.json</code> に追記すると表示されます。`
+    : "";
 }
 
 function cellColor(v){
@@ -298,7 +416,22 @@ function renderStamp(){
   }
 }
 
-function renderAll(){ renderChips(); renderMeters(); renderMatrix(); renderCbTable(); renderStamp(); }
+function renderAll(){
+  renderChips(); renderNextStrip(); renderMeters();
+  renderCalendar(); renderMatrix(); renderCbTable(); renderStamp();
+}
+
+async function loadMeetings(){
+  try {
+    const res = await fetch("meetings.json?t=" + Date.now(), { cache: "no-store" });
+    if (!res.ok) throw new Error(res.status);
+    meetings = await res.json();
+    localStorage.setItem("prb:meetings", JSON.stringify(meetings));
+  } catch (e) {
+    const c = localStorage.getItem("prb:meetings");
+    if (c) { try { meetings = JSON.parse(c); } catch (_) {} }
+  }
+}
 
 async function loadRates(){
   try {
@@ -323,11 +456,12 @@ $("chips").addEventListener("click", e => {
   localStorage.setItem("prb:base", base);
   renderChips(); renderMeters();
 });
-$("reload").addEventListener("click", loadRates);
-document.addEventListener("visibilitychange", () => { if (!document.hidden) loadRates(); });
+async function refresh(){ await loadMeetings(); await loadRates(); }
+$("reload").addEventListener("click", refresh);
+document.addEventListener("visibilitychange", () => { if (!document.hidden) refresh(); });
 
 renderAll();
-loadRates();
+(async () => { await loadMeetings(); renderAll(); await loadRates(); })();
 
 if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
   navigator.serviceWorker.register("sw.js").catch(() => {});

@@ -1,5 +1,5 @@
 /* 画面の枠はキャッシュ、金利データは必ずネット優先で取りにいく */
-const SHELL = "prb-shell-v1";
+const SHELL = "prb-shell-v2";
 const FILES = ["./", "./index.html", "./manifest.webmanifest"];
 
 self.addEventListener("install", e => {
@@ -20,7 +20,7 @@ self.addEventListener("fetch", e => {
   const url = new URL(req.url);
   if (url.origin !== location.origin) return;
 
-  if (url.pathname.endsWith("rates.json")) {
+  if (url.pathname.endsWith("rates.json") || url.pathname.endsWith("meetings.json")) {
     e.respondWith(fetch(req).catch(() => caches.match(req)));
     return;
   }
