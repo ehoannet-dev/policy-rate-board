@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>政策金利盤</title>
+<meta name="description" content="主要11通貨の政策金利と金利差を一画面で確認する個人用ダッシュボード">
+<meta name="theme-color" content="#212A25">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="政策金利盤">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#EDF0EC; --panel:#E3E8E3; --panel-2:#D5DCD6;
+    --ink:#1B231F; --ink-soft:#5C6862; --line:#B6C0B8;
+    --rise:#B4302A; --fall:#1D5B96; --brass:#9A751F; --earth:#2E6B4F; --plate:#212A25;
+    --mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+    --sans:'IBM Plex Sans JP',-apple-system,BlinkMacSystemFont,'Hiragino Sans','Noto Sans JP',sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%}
+  .wrap{max-width:960px;margin:0 auto;padding:0 0 64px}
+
+  /* 銘板 */
+  header.plate{
+    background:var(--plate);color:#E8EEE9;
+    padding:calc(16px + env(safe-area-inset-top)) 18px 14px;
+    border-bottom:4px solid var(--brass);
+    position:sticky;top:0;z-index:20;
+  }
+  .plate .eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:.2em;color:#93A69B;text-transform:uppercase}
+  .plate h1{margin:1px 0 0;font-size:21px;font-weight:700;letter-spacing:.2em}
+  .stamp{display:flex;align-items:center;gap:8px;margin-top:8px;font-family:var(--mono);font-size:11px;color:#93A69B;flex-wrap:wrap}
+  .stamp b{color:#E8EEE9;font-weight:500}
+  .stamp .dot{width:7px;height:7px;border-radius:50%;background:var(--earth);flex:none}
+  .stamp.stale .dot{background:var(--brass)}
+  .stamp button{
+    margin-left:auto;background:none;border:1px solid #45524A;color:#C6D2CA;
+    font-family:var(--mono);font-size:11px;padding:3px 10px;letter-spacing:.08em;cursor:pointer;
+  }
+  .stamp button:active{background:#2E3A33}
+
+  /* 基準通貨 */
+  .baseline{padding:14px 18px 0}
+  .baseline .lab{font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;color:var(--ink-soft);margin-bottom:7px}
+  .chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch}
+  .chip{
+    flex:none;font-family:var(--mono);font-size:12.5px;letter-spacing:.06em;
+    padding:6px 12px;border:1px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer;
+  }
+  .chip[aria-pressed="true"]{background:var(--plate);color:#E8EEE9;border-color:var(--plate)}
+  .chip:focus-visible{outline:2px solid var(--earth);outline-offset:2px}
+
+  /* 計器リスト */
+  .meters{margin:14px 0 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--panel)}
+  .row{display:grid;grid-template-columns:58px 1fr auto;gap:12px;align-items:center;padding:11px 18px;border-bottom:1px solid var(--line)}
+  .row:last-child{border-bottom:none}
+  .row:nth-child(even){background:rgba(255,255,255,.42)}
+  .row.is-base{background:rgba(154,117,31,.1)}
+  .code{font-family:var(--mono);font-size:17px;font-weight:600;letter-spacing:.04em;border-left:3px solid var(--line);padding-left:8px}
+  .code.hi{border-left-color:var(--rise)} .code.lo{border-left-color:var(--fall)}
+  .mid .n{font-size:13.5px;font-weight:500;line-height:1.35}
+  .mid .cb{font-size:10.5px;color:var(--ink-soft);font-family:var(--mono)}
+  .mid .gauge{position:relative;height:5px;background:rgba(255,255,255,.75);border:1px solid var(--line);margin-top:5px;max-width:230px}
+  .mid .gauge i{position:absolute;left:0;top:0;bottom:0;background:var(--fall);opacity:.8}
+  .mid .gauge i.warm{background:var(--rise)}
+  .mid .gauge s{position:absolute;top:-2px;bottom:-2px;border-left:2px dotted var(--brass);width:0}
+  .val{text-align:right;font-family:var(--mono);min-width:96px}
+  .val .r{font-size:20px;font-weight:600;line-height:1.15}
+  .val .r em{font-size:12px;font-style:normal}
+  .val .diff{font-size:12px;font-weight:500}
+  .val .diff.p{color:var(--rise)} .val .diff.m{color:var(--fall)} .val .diff.z{color:var(--ink-soft)}
+  .val .dt{font-size:9.5px;color:var(--ink-soft);letter-spacing:.02em}
+  .val .flag{font-size:9.5px;color:var(--brass);letter-spacing:.04em}
+
+  /* 折りたたみ */
+  details{border-bottom:1px solid var(--line);background:var(--panel)}
+  details>summary{
+    list-style:none;cursor:pointer;padding:13px 18px;
+    font-size:13px;font-weight:500;letter-spacing:.08em;display:flex;align-items:center;gap:8px;
+  }
+  details>summary::-webkit-details-marker{display:none}
+  details>summary::after{content:"＋";margin-left:auto;font-family:var(--mono);color:var(--ink-soft)}
+  details[open]>summary::after{content:"−"}
+  .inner{padding:0 18px 18px}
+
+  .mx-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--line);background:#fff}
+  table.mx{border-collapse:collapse;font-family:var(--mono);font-size:11.5px;min-width:600px;width:100%}
+  table.mx th,table.mx td{border:1px solid var(--line);padding:5px 3px;text-align:center;white-space:nowrap}
+  table.mx thead th{background:var(--plate);color:#E8EEE9;font-weight:500;letter-spacing:.06em}
+  table.mx tbody th{background:var(--panel-2);font-weight:600;text-align:left;padding-left:8px;position:sticky;left:0}
+  table.mx td.self{background:repeating-linear-gradient(45deg,var(--panel-2),var(--panel-2) 4px,#fff 4px,#fff 8px);color:transparent}
+  .legend{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:10.5px;color:var(--ink-soft);margin-top:9px;flex-wrap:wrap}
+  .sw{width:22px;height:11px;display:inline-block;border:1px solid var(--line)}
+
+  .srclist{margin:0;padding:0;list-style:none}
+  .srclist li{padding:9px 0;border-bottom:1px solid var(--line)}
+  .srclist li:last-child{border-bottom:none}
+  .srclist .t{font-size:13px;font-weight:500}
+  .srclist .d{font-size:11.5px;color:var(--ink-soft);line-height:1.5}
+  .srclist a{font-family:var(--mono);font-size:11px;color:var(--earth);word-break:break-all;text-decoration:none;border-bottom:1px solid rgba(46,107,79,.35)}
+  .cbtable{width:100%;border-collapse:collapse;font-size:12px}
+  .cbtable td{padding:6px 4px;border-bottom:1px solid var(--line);vertical-align:top}
+  .cbtable td:first-child{font-family:var(--mono);font-weight:600;width:52px}
+  .cbtable a{font-family:var(--mono);font-size:11px;color:var(--earth);text-decoration:none;border-bottom:1px solid rgba(46,107,79,.35)}
+
+  .foot{padding:20px 18px 0;font-size:11.5px;color:var(--ink-soft);line-height:1.75}
+  .foot code{font-family:var(--mono);background:var(--panel-2);padding:1px 5px}
+  .banner{margin:0;padding:10px 18px;background:rgba(154,117,31,.16);border-bottom:1px solid var(--line);font-size:12px;display:none}
+  .banner.on{display:block}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+  @media (min-width:640px){
+    .row{grid-template-columns:70px 1fr auto;padding:13px 22px}
+    .plate h1{font-size:24px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="plate">
+    <div class="eyebrow">Policy Rate Board</div>
+    <h1>政策金利盤</h1>
+    <div class="stamp" id="stamp">
+      <span class="dot"></span><span>更新 <b id="updated">読み込み中…</b></span>
+      <button id="reload" type="button">再読込</button>
+    </div>
+  </header>
+
+  <p class="banner" id="banner"></p>
+
+  <div class="baseline">
+    <div class="lab">基準通貨（この通貨との差を表示）</div>
+    <div class="chips" id="chips"></div>
+  </div>
+
+  <div class="meters" id="meters"></div>
+
+  <details id="mxWrap">
+    <summary>金利差マトリクス（全ペア）</summary>
+    <div class="inner">
+      <div class="mx-scroll"><table class="mx" id="matrix"></table></div>
+      <div class="legend">
+        <span class="sw" style="background:rgba(180,48,42,.55)"></span><span>行が高金利</span>
+        <span class="sw" style="background:rgba(29,91,150,.55)"></span><span>行が低金利</span>
+        <span>単位 ％pt</span>
+      </div>
+    </div>
+  </details>
+
+  <details>
+    <summary>各中央銀行の公式ページ</summary>
+    <div class="inner"><table class="cbtable" id="cbtable"></table></div>
+  </details>
+
+  <details>
+    <summary>出典と他の一覧サイト</summary>
+    <div class="inner">
+      <ul class="srclist">
+        <li><div class="t">BIS Central bank policy rates</div><div class="d">この盤の自動更新元。国際決済銀行の公式データセット。</div><a href="https://www.bis.org/statistics/cbpol.htm" target="_blank" rel="noopener">https://www.bis.org/statistics/cbpol.htm</a></li>
+        <li><div class="t">トレーダーズ・ウェブFX 各国の政策金利</div><div class="d">日本語で更新が早い一覧。中銀声明のヘッドラインも並ぶ。</div><a href="https://www.traderswebfx.jp/interest_rate/" target="_blank" rel="noopener">https://www.traderswebfx.jp/interest_rate/</a></li>
+        <li><div class="t">みんかぶFX 政策金利一覧</div><div class="d">シンプルな一覧表。</div><a href="https://fx.minkabu.jp/references/interest_rates" target="_blank" rel="noopener">https://fx.minkabu.jp/references/interest_rates</a></li>
+        <li><div class="t">cbrates.com</div><div class="d">次回会合日程まで含めた中銀トラッカー。英語。</div><a href="https://www.cbrates.com/" target="_blank" rel="noopener">https://www.cbrates.com/</a></li>
+        <li><div class="t">時事エクイティ 金融政策スケジュール</div><div class="d">会合日程の確認用。</div><a href="https://equity.jiji.com/monetary_policy_schedules" target="_blank" rel="noopener">https://equity.jiji.com/monetary_policy_schedules</a></li>
+        <li><div class="t">CME FedWatch Tool</div><div class="d">次回FOMCの織り込み確率。水準より方向を見るためのもの。</div><a href="https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html" target="_blank" rel="noopener">https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html</a></li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="foot">
+    <p>米FF金利はレンジ目標のため中央値を表示しています。ECBはBISの採用系列に従います（MROとDFRでサイトにより表示が異なるので、他サイトと比べるときは注意）。</p>
+    <p>BISは各中銀の発表を反映するまで数日かかることがあります。会合直後にすぐ直したいときは、リポジトリの <code>overrides.json</code> に書けば次の更新から優先されます。</p>
+    <p>金利差はスワップの方向感の材料であって、それ単体では売買根拠になりません。実際に効くのは水準より「次の会合で何が織り込まれているか」です。</p>
+  </div>
+</div>
+
+<script>
+/* 初回表示用の内蔵データ。Actions が data/rates.json を作れば常にそちらが優先される。 */
+const SEED = {
+  generated_at_display: "2026-08-15 （内蔵の初期値）",
+  seed: true,
+  rows: [
+    {code:"TRY",country:"トルコ",cb:"CBRT / 1週間レポ金利",rate:37.00,label:"37.00",changed_on:"2026-07-23",url:"https://www.tcmb.gov.tr/"},
+    {code:"ZAR",country:"南アフリカ",cb:"SARB / レポレート",rate:7.00,label:"7.00",changed_on:"2026-07-23",url:"https://www.resbank.co.za/en/home/what-we-do/monetary-policy"},
+    {code:"MXN",country:"メキシコ",cb:"Banxico / 翌日物金利目標",rate:6.50,label:"6.50",changed_on:"2026-08-06",url:"https://www.banxico.org.mx/"},
+    {code:"AUD",country:"オーストラリア",cb:"RBA / キャッシュレート",rate:4.35,label:"4.35",changed_on:"2026-08-11",url:"https://www.rba.gov.au/statistics/cash-rate/"},
+    {code:"GBP",country:"英国",cb:"BOE / バンクレート",rate:3.75,label:"3.75",changed_on:"2026-07-30",url:"https://www.bankofengland.co.uk/monetary-policy/the-interest-rate-bank-rate"},
+    {code:"USD",country:"米国",cb:"FRB / FF金利誘導目標",rate:3.625,label:"3.50–3.75",changed_on:"2026-07-29",url:"https://www.federalreserve.gov/monetarypolicy/openmarket.htm"},
+    {code:"NZD",country:"ニュージーランド",cb:"RBNZ / OCR",rate:2.50,label:"2.50",changed_on:"2026-07-08",url:"https://www.rbnz.govt.nz/monetary-policy"},
+    {code:"EUR",country:"ユーロ圏",cb:"ECB / 政策金利",rate:2.40,label:"2.40",changed_on:"2026-07-23",url:"https://www.ecb.europa.eu/stats/policy_and_exchange_rates/key_ecb_interest_rates/html/index.en.html"},
+    {code:"CAD",country:"カナダ",cb:"BOC / 翌日物金利",rate:2.25,label:"2.25",changed_on:"2026-07-15",url:"https://www.bankofcanada.ca/core-functions/monetary-policy/key-interest-rate/"},
+    {code:"JPY",country:"日本",cb:"日銀 / 無担保コールO/N",rate:1.00,label:"1.00",changed_on:"2026-07-31",url:"https://www.boj.or.jp/mopo/mpmdeci/index.htm"},
+    {code:"CHF",country:"スイス",cb:"SNB / SNB政策金利",rate:0.00,label:"0.00",changed_on:"2026-06-18",url:"https://www.snb.ch/en/"}
+  ]
+};
+
+let data = SEED;
+let base = localStorage.getItem("prb:base") || "JPY";
+
+const $ = id => document.getElementById(id);
+const fmt = n => (Math.round(n * 100) / 100).toFixed(2);
+const jpDate = s => s ? s.replace(/-/g, "/") : "—";
+
+/* 0–8%を70%幅、それ以上は圧縮 */
+const gauge = r => r <= 8 ? Math.max(0, r) / 8 * 70 : 70 + Math.min(30, (r - 8) / 32 * 30);
+
+function median(){
+  const a = data.rows.map(r => r.rate).sort((x, y) => x - y);
+  return a[Math.floor(a.length / 2)];
+}
+
+function renderChips(){
+  $("chips").innerHTML = data.rows.map(r =>
+    `<button class="chip" data-c="${r.code}" aria-pressed="${r.code === base}">${r.code}</button>`
+  ).join("");
+}
+
+function renderMeters(){
+  const med = median();
+  const b = data.rows.find(r => r.code === base);
+  $("meters").innerHTML = [...data.rows].sort((x, y) => y.rate - x.rate).map(r => {
+    const warm = r.rate >= med;
+    const d = b ? r.rate - b.rate : 0;
+    const cls = d > 0.0001 ? "p" : d < -0.0001 ? "m" : "z";
+    const diff = r.code === base
+      ? `<div class="diff z">基準</div>`
+      : `<div class="diff ${cls}">${d > 0 ? "+" : ""}${fmt(d)} vs ${base}</div>`;
+    return `<div class="row ${r.code === base ? "is-base" : ""}">
+      <div class="code ${warm ? "hi" : "lo"}">${r.code}</div>
+      <div class="mid">
+        <div class="n">${r.country}</div>
+        <div class="cb">${r.cb}</div>
+        <div class="gauge"><i class="${warm ? "warm" : ""}" style="width:${gauge(r.rate)}%"></i><s style="left:70%"></s></div>
+      </div>
+      <div class="val">
+        <div class="r">${r.label || fmt(r.rate)}<em>%</em></div>
+        ${diff}
+        <div class="dt">変更 ${jpDate(r.changed_on)}</div>
+        ${r.source === "手動" ? '<div class="flag">手動更新</div>' : ""}
+      </div>
+    </div>`;
+  }).join("");
+}
+
+function cellColor(v){
+  const a = Math.min(0.6, Math.abs(v) / 12 * 0.6 + (v === 0 ? 0 : 0.08));
+  if (v > 0) return `rgba(180,48,42,${a})`;
+  if (v < 0) return `rgba(29,91,150,${a})`;
+  return "#fff";
+}
+
+function renderMatrix(){
+  const list = [...data.rows].sort((x, y) => y.rate - x.rate);
+  let h = "<thead><tr><th style='text-align:left;padding-left:8px'>行−列</th>";
+  list.forEach(c => h += `<th>${c.code}</th>`);
+  h += "</tr></thead><tbody>";
+  list.forEach(r => {
+    h += `<tr><th>${r.code}</th>`;
+    list.forEach(c => {
+      if (r.code === c.code) { h += `<td class="self">·</td>`; return; }
+      const d = r.rate - c.rate;
+      h += `<td style="background:${cellColor(d)}">${d > 0 ? "+" : ""}${fmt(d)}</td>`;
+    });
+    h += "</tr>";
+  });
+  $("matrix").innerHTML = h + "</tbody>";
+}
+
+function renderCbTable(){
+  $("cbtable").innerHTML = [...data.rows].sort((x, y) => x.code.localeCompare(y.code)).map(r =>
+    `<tr><td>${r.code}</td><td>${r.country}<br><span style="color:var(--ink-soft)">${r.cb}</span><br>
+     <a href="${r.url}" target="_blank" rel="noopener">${r.url.replace(/^https?:\/\//, "").slice(0, 46)}…</a></td></tr>`
+  ).join("");
+}
+
+function renderStamp(){
+  $("updated").textContent = data.generated_at_display || "不明";
+  const stale = data.seed || data.bis_ok === false;
+  $("stamp").classList.toggle("stale", !!stale);
+  const b = $("banner");
+  if (data.seed) {
+    b.textContent = "まだ自動更新が一度も走っていません。内蔵の初期値を表示しています。";
+    b.classList.add("on");
+  } else if (data.bis_ok === false) {
+    b.textContent = "BISからの取得に失敗したため、前回取得できた値を表示しています。";
+    b.classList.add("on");
+  } else if ((data.missing || []).length) {
+    b.textContent = "一部の通貨がBISから取得できず、前回値のままです：" + data.missing.join(", ");
+    b.classList.add("on");
+  } else {
+    b.classList.remove("on");
+  }
+}
+
+function renderAll(){ renderChips(); renderMeters(); renderMatrix(); renderCbTable(); renderStamp(); }
+
+async function loadRates(){
+  try {
+    const res = await fetch("data/rates.json?t=" + Date.now(), { cache: "no-store" });
+    if (!res.ok) throw new Error(res.status);
+    const j = await res.json();
+    if (j && Array.isArray(j.rows) && j.rows.length) {
+      data = j;
+      localStorage.setItem("prb:cache", JSON.stringify(j));
+    }
+  } catch (e) {
+    const c = localStorage.getItem("prb:cache");   // オフライン時は前回取得分
+    if (c) { try { data = JSON.parse(c); } catch (_) {} }
+  }
+  renderAll();
+}
+
+$("chips").addEventListener("click", e => {
+  const btn = e.target.closest(".chip");
+  if (!btn) return;
+  base = btn.dataset.c;
+  localStorage.setItem("prb:base", base);
+  renderChips(); renderMeters();
+});
+$("reload").addEventListener("click", loadRates);
+document.addEventListener("visibilitychange", () => { if (!document.hidden) loadRates(); });
+
+renderAll();
+loadRates();
+
+if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
+  navigator.serviceWorker.register("sw.js").catch(() => {});
+}
+</script>
+</body>
+</html>
