@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-10T08:19:46+09:00",
-  "generated_at_display": "2026-09-10 08:19 JST",
+  "generated_at": "2026-09-11T08:13:38+09:00",
+  "generated_at_display": "2026-09-11 08:13 JST",
   "primary_source": "BIS Central bank policy rates (WS_CBPOL)",
   "primary_source_url": "https://www.bis.org/statistics/cbpol.htm",
   "bis_ok": true,
@@ -83,9 +83,9 @@
       "country": "ニュージーランド",
       "cb": "RBNZ / OCR",
       "url": "https://www.rbnz.govt.nz/monetary-policy",
-      "rate": 2.5,
-      "label": "2.50",
-      "changed_on": "2026-07-09",
+      "rate": 2.75,
+      "label": "2.75",
+      "changed_on": "2026-09-03",
       "source": "BIS",
       "note": null
     },
