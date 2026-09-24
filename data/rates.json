@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-24T08:46:36+09:00",
-  "generated_at_display": "2026-09-24 08:46 JST",
+  "generated_at": "2026-09-25T08:54:31+09:00",
+  "generated_at_display": "2026-09-25 08:54 JST",
   "primary_source": "BIS Central bank policy rates (WS_CBPOL)",
   "primary_source_url": "https://www.bis.org/statistics/cbpol.htm",
   "bis_ok": true,
@@ -57,6 +57,17 @@
       "note": null
     },
     {
+      "code": "USD",
+      "country": "米国",
+      "cb": "FRB / FF金利誘導目標",
+      "url": "https://www.federalreserve.gov/monetarypolicy/openmarket.htm",
+      "rate": 3.875,
+      "label": "3.88",
+      "changed_on": "2026-09-17",
+      "source": "BIS",
+      "note": null
+    },
+    {
       "code": "GBP",
       "country": "英国",
       "cb": "BOE / バンクレート",
@@ -64,17 +75,6 @@
       "rate": 3.75,
       "label": "3.75",
       "changed_on": "2025-12-18",
-      "source": "BIS",
-      "note": null
-    },
-    {
-      "code": "USD",
-      "country": "米国",
-      "cb": "FRB / FF金利誘導目標",
-      "url": "https://www.federalreserve.gov/monetarypolicy/openmarket.htm",
-      "rate": 3.625,
-      "label": "3.62",
-      "changed_on": "2025-12-11",
       "source": "BIS",
       "note": null
     },
@@ -94,9 +94,9 @@
       "country": "ユーロ圏",
       "cb": "ECB / 政策金利",
       "url": "https://www.ecb.europa.eu/stats/policy_and_exchange_rates/key_ecb_interest_rates/html/index.en.html",
-      "rate": 2.25,
-      "label": "2.25",
-      "changed_on": "2026-06-17",
+      "rate": 2.5,
+      "label": "2.50",
+      "changed_on": "2026-09-16",
       "source": "BIS",
       "note": null
     },
