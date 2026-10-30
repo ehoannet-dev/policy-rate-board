@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-29T10:02:27+09:00",
-  "generated_at_display": "2026-10-29 10:02 JST",
+  "generated_at": "2026-10-30T10:07:31+09:00",
+  "generated_at_display": "2026-10-30 10:07 JST",
   "primary_source": "BIS Central bank policy rates (WS_CBPOL)",
   "primary_source_url": "https://www.bis.org/statistics/cbpol.htm",
   "bis_ok": true,
@@ -17,9 +17,9 @@
       "country": "トルコ",
       "cb": "CBRT / 1週間レポ金利",
       "url": "https://www.tcmb.gov.tr/",
-      "rate": 37.0,
-      "label": "37.00",
-      "changed_on": "2026-01-23",
+      "rate": 36.0,
+      "label": "36.00",
+      "changed_on": "2026-10-23",
       "source": "BIS",
       "note": null
     },
