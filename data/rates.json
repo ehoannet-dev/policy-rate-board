@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-11-05T10:29:49+09:00",
-  "generated_at_display": "2026-11-05 10:29 JST",
+  "generated_at": "2026-11-06T10:37:09+09:00",
+  "generated_at_display": "2026-11-06 10:37 JST",
   "primary_source": "BIS Central bank policy rates (WS_CBPOL)",
   "primary_source_url": "https://www.bis.org/statistics/cbpol.htm",
   "bis_ok": true,
@@ -105,9 +105,9 @@
       "country": "カナダ",
       "cb": "BOC / 翌日物金利",
       "url": "https://www.bankofcanada.ca/core-functions/monetary-policy/key-interest-rate/",
-      "rate": 2.25,
-      "label": "2.25",
-      "changed_on": "2025-10-30",
+      "rate": 2.5,
+      "label": "2.50",
+      "changed_on": "2026-10-29",
       "source": "BIS",
       "note": null
     },
